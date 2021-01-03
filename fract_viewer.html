@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='UTF-8'/>
+		<title>Fractal viewer</title>
+		<script type='text/javascript' src='fract_main.js'></script>
+		<style>
+			canvas { border:1px solid #000; }
+			#control_panel { width:480px; }
+		</style>
+	</head>
+	<body>
+		<noscript>This site does not work without JavaScript.</noscript>
+		<canvas id='id_canvas'>
+			<p>Visualization of a fractal set.</p>
+		</canvas>
+		<div id='control_panel'>
+			<table>
+				<tr>
+					<td>
+						<fieldset>
+							<legend>Mouse action</legend>
+							<div>
+								<input id='mouse_move' name='mouse_action' type='radio' value='move'>
+								<label for='mouse_move'>Pan</label>
+							</div>
+							<div>
+								<input id='mouse_zoom' name='mouse_action' type='radio' value='zoom'>
+								<label for='mouse_zoom'>Zoom-in</label>
+							</div>
+						</fieldset>
+					</td>
+					<td>
+						<fieldset>
+							<legend>Image resolution</legend>
+							<div>
+								<input id='resolution_low' name='img_resolution' type='radio' value='640'>
+								<label for='resolution_low'>Low</label>
+							</div>
+							<div>
+								<input id='resolution_medium' name='img_resolution' type='radio' value='1280'>
+								<label for='resolution_medium'>Medium</label>
+							</div>
+							<div>
+								<input id='resolution_high' name='img_resolution' type='radio' value='2560'>
+								<label for='resolution_high'>High</label>
+							</div>
+						</fieldset>
+					</td>
+					<td>
+						<p>
+							<label for='precision'>Precision: </label>
+							<input id='precision' type='range'>
+							<output id='precision_number' for='precision'></output>
+						</p>
+						<p>
+							<input id='reset' type='button' value='Reset'>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<progress id='progress_bar' value='0' hidden='true'></progress>
+		</div>
+	</body>
+</html>
