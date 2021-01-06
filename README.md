@@ -3,6 +3,11 @@ A Fractal Viewer implemented in JavaScript for running in web browsers.
 
 [Directly open it](https://n3xus6.github.io/fractalviewer/fract_viewer.html)
 
+### Screenshots
+
+![Fractal Viewer Mandelbrot Set](./mandelbrot_start.png "Mandelbrot Set")
+
+![Fractal Viewer Mandelbrot Set Seahorse](./mandelbrot_seahorse.png "Mandelbrot Set Seahorse")
 
 ### Running it locally
 
