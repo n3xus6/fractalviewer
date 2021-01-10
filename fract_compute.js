@@ -29,19 +29,19 @@ function mandelbrot_calc(c, n) {
 	return i;
 }
 
-/* Values inside these areas are known to belong to the Mandelbrot set.
-   The data is used to speed-up calculation.
-   TODO: optimize. */
-const mbrot_known = [
-	{ x: -1.35,  y:  0.03,  w: 0.087, h: 0.056  },
-	{ x: -1.17,  y:  0.16,  w: 0.35,  h: 0.33   },
-	{ x: -0.186, y:  0.806, w: 0.124, h: 0.128  },
-	{ x: -0.183, y: -0.678, w: 0.120, h: 0.125  },
-	{ x: -0.534, y:  0.46,  w: 0.77,  h: 0.9    },
-	{ x: -0.310, y:  0.608, w: 0.380, h: 0.072  },
-	{ x:  0.255, y:  0.381, w: 0.072, h: 0.307  },
-	{ x: -0.409, y: -0.529, w: 0.566, h: 0.0378 },
-	{ x:  0.258, y: -0.045, w: 0.048, h: 0.373  }
+/* Numbers within these regions belong to M. Skipping the test for them largely
+   decreases the computation time. */
+const M_skip_regions = [
+	{ x0: -1.350, y0:  0.035, x1: -1.270, y1: -0.035 }, // small bulb center
+	{ x0: -1.175, y0:  0.175, x1: -0.825, y1: -0.175 }, // middle bulb center
+	{ x0: -0.567, y0:  0.442, x1:  0.245, y1: -0.442 }, // large bulb center
+	{ x0: -0.180, y0: -0.690, x1: -0.060, y1: -0.810 }, // lower small bulb center
+	{ x0: -0.180, y0:  0.810, x1: -0.060, y1:  0.690 }, // upper small bulb center
+	{ x0: -0.445, y0: -0.442, x1:  0.195, y1: -0.542 }, // large bulb lower region
+	{ x0: -0.445, y0:  0.542, x1:  0.195, y1:  0.442 }, // large bulb upper region
+	{ x0: -0.670, y0:  0.300, x1: -0.568, y1: -0.300 }, // large bulb left region
+	{ x0:  0.245, y0: -0.100, x1:  0.345, y1: -0.300 }, // large bulb lower right region
+	{ x0:  0.245, y0:  0.300, x1:  0.345, y1:  0.100 }, // large bulb upper right region
 ];
 
 /* Initialize the image data 'img'. The complex plane area is specified
@@ -57,8 +57,8 @@ function mandelbrot_init([img, cplane, n]) {
 		for (let x = 0, a = cplane.x; x < img.width; x++, a += r) {
 			
 			let skip = false;
-			for (const e of mbrot_known) {
-				if (a > e.x && a < e.x + e.w && b < e.y && b > e.y - e.h) {
+			for (const e of M_skip_regions) {
+				if (a > e.x0 && a < e.x1 && b < e.y0 && b > e.y1) {
 					skip = true;
 					break;
 				}
