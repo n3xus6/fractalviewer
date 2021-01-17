@@ -137,7 +137,7 @@ function init() {
 		ctx.strokeStyle = '#ff0';
 	}
 	
-	renderer = new Renderer(ctx, document.getElementById('resolution_low').value);
+	renderer = new Renderer(ctx, canvas.width);
 	state = new State('move');
 	
 	
