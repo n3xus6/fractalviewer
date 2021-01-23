@@ -29,8 +29,10 @@ function mandelbrot_calc(c, n) {
 	return i;
 }
 
-/* Numbers within these regions belong to M. Skipping the test for them largely
-   decreases the computation time. */
+/* Numbers within these regions belong to M (only an approximation).
+   Skipping the test for them largely decreases the computation time. However,
+   it would be also possible, and nicer, to quickly calculate if c is in the
+   main cardioid or the period 2 component to avoid the function interation. */
 const M_skip_regions = [
 	{ x0: -1.350, y0:  0.035, x1: -1.270, y1: -0.035 }, // small bulb center
 	{ x0: -1.175, y0:  0.175, x1: -0.825, y1: -0.175 }, // middle bulb center
