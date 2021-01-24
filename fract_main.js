@@ -13,6 +13,7 @@ function ComplexPlane() {
 	const CPLANE_H =  2.0;
 	var _rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_W, h: CPLANE_H };
 	var _precision = PRECISION_DEF;
+	var _iter_start = 0;
 	
 	return {
 		resize: function(area, basis_length) {
@@ -29,13 +30,16 @@ function ComplexPlane() {
 		reset: function() {
 			_rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_W, h: CPLANE_H };
 			_precision = PRECISION_DEF;
+			_iter_start = 0;
 		},
 		
 		get rect() { return _rect; },
 		get precision() { return _precision; },
 		get PRECISION_MIN() { return PRECISION_MIN; },
 		get PRECISION_MAX() { return PRECISION_MAX; },
+		get iter_start() { return _iter_start; },
 		set precision(precision) { _precision = precision; },
+		set iter_start(iter_start) { _iter_start = iter_start},
 	};
 }
 
@@ -56,11 +60,13 @@ function Renderer(ctx, resolution) {
 				render_worker.terminate();
 			
 			render_worker = new Worker('fract_compute.js');
-			render_worker.postMessage({query: 'mandelbrot_init', param: [img.data, cplane.rect, cplane.precision]});
+			render_worker.postMessage({query: 'mandelbrot_init', param: [img.data, cplane.rect, cplane.precision, cplane.iter_start]});
 			render_worker.onmessage = function(msg) {
 				if (msg.data.status == 'finished') {
 					progress.hidden = true;
+					cplane.iter_start = msg.data.iter_min;
 					img = { x: reset_pos ? 0 : img.x, y: reset_pos ? 0 : img.y, data: msg.data.img };
+					// console.log(cplane.iter_start);
 				} else {
 					progress.value = msg.data.progress;	
 				}

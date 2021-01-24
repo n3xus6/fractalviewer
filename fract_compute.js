@@ -48,9 +48,10 @@ const M_skip_regions = [
 
 /* Initialize the image data 'img'. The complex plane area is specified
    by 'c1' and 'c2'. */
-function mandelbrot_init([img, cplane, n]) {
+function mandelbrot_init([img, cplane, n, iter_start]) {
 	const num_px = img.height * img.width;
 	let progress = 0;
+	let iter_min = n;
 	
 	for (let y_px = 0, y = cplane.y; y_px < img.height; y_px++, y -= cplane.w / img.width) {
 		let cur_px = 0;
@@ -68,22 +69,28 @@ function mandelbrot_init([img, cplane, n]) {
 			/* If m == n, we consider c = x + iy as an element of M. */
 			const m = skip ? n : mandelbrot_calc({re: x, im: y}, n);
 
+			if (m < iter_min)
+				iter_min = m;
+
 			/* Pixels are colored depending on the iteration count.
 			   Different color gradients represent small, moderate and large
-			   iteration counts. Black pixels represent the c's included in M. */
+			   iteration counts. Black pixels represent the c values in M.
+			   Considering the smallest iteration count from the previous
+			   calculation when doing the color mapping offers more details
+			   in the picture. */
 			let i = 4 * (cur_px = (y_px * img.width + x_px));
-			const f = (n/5);
+			const f = ((n - iter_start) / 5);
 			
-			if (m < f) // Red -> Yellow
-				[ img.data[i++], img.data[i++], img.data[i++] ] = [255, 255 * m/f, 0];
-			else if (m < 2*f) // Yellow -> Green
-				[ img.data[i++], img.data[i++], img.data[i++] ] = [255 * (2 - m/f), 255, 0];
-			else if (m < 3*f) // Green -> Cyan
-				[ img.data[i++], img.data[i++], img.data[i++] ] = [0, 255, 255 * (m/f - 2)];
-			else if (m < 4*f) // Cyan -> Blue
-				[ img.data[i++], img.data[i++], img.data[i++] ] = [0, 255 * (4 - m/f), 255];
-			else if (m < 5*f) // Blue -> Purple
-				[ img.data[i++], img.data[i++], img.data[i++] ] = [255 * (m/f - 4), 0, 255];
+			if (m - iter_start < f) // Red -> Yellow
+				[ img.data[i++], img.data[i++], img.data[i++] ] = [255, 255 * (m - iter_start) / f, 0];
+			else if (m - iter_start < 2*f) // Yellow -> Green
+				[ img.data[i++], img.data[i++], img.data[i++] ] = [255 * (2 - ((m - iter_start)/f)), 255, 0];
+			else if (m - iter_start < 3*f) // Green -> Cyan
+				[ img.data[i++], img.data[i++], img.data[i++] ] = [0, 255, 255 * ((m - iter_start)/f - 2)];
+			else if (m - iter_start < 4*f) // Cyan -> Blue
+				[ img.data[i++], img.data[i++], img.data[i++] ] = [0, 255 * (4 - ((m - iter_start)/f)), 255];
+			else if (m - iter_start < 5*f) // Blue -> Purple
+				[ img.data[i++], img.data[i++], img.data[i++] ] = [255 * ((m - iter_start)/f - 4), 0, 255];
 			else // Black
 				[ img.data[i++], img.data[i++], img.data[i++] ] = [0, 0, 0];
 			img.data[i] = 0xff;
@@ -95,7 +102,7 @@ function mandelbrot_init([img, cplane, n]) {
 		}
 	}
 	
-	postMessage({status: 'finished', img: img});
+	postMessage({status: 'finished', img: img, iter_min: iter_min});
 }
 
 onmessage = function(msg) {
