@@ -16,15 +16,17 @@ function ComplexPlane() {
 	var _iter_start = 0;
 	
 	return {
-		resize: function(area, basis_length) {
-			/* The complex-plane dimensions are specified by the given circle area
+		resize: function(section, basis_length) {
+			/* The complex-plane dimensions are specified by the given rectangle
 			 * which uses pixel coordinates that must be transformed. */
 			const f = _rect.w / basis_length;
 
-			if (!area.r || !basis_length)
+			if (!section.w || !section.h || !basis_length)
 				return;
+
+			let sidelength = section.w > section.h ? section.w : section.h;
 			
-			_rect = { x: _rect.x + (area.x - area.r) * f, y: _rect.y - (area.y - area.r) * f, w: area.r * 2 * f, h: area.r * 2 * f };
+			_rect = { x: _rect.x + section.x * f, y: _rect.y - section.y * f, w: sidelength * f, h: sidelength * f };
 		},
 		
 		reset: function() {
@@ -86,10 +88,26 @@ function Renderer(ctx, resolution) {
 		
 		draw: function() {
 			ctx.putImageData(img.data, img.x, img.y);
-			if (state.zoom_rect) {
-				ctx.beginPath();
-				ctx.arc(state.zoom_rect.x, state.zoom_rect.y, state.zoom_rect.r, 0, 2 * Math.PI);
-				ctx.stroke();
+			if (state.zoom_rect && state.zoom_rect.w > 0) {
+				/* Draw Zoom tool */
+				ctx.fillStyle = '#0004';
+				ctx.fillRect(state.zoom_rect.x, state.zoom_rect.y, state.zoom_rect.w, state.zoom_rect.h);
+				ctx.lineWidth = 2;
+				ctx.setLineDash([4, 2]);
+				ctx.strokeStyle = 'white';
+				ctx.strokeRect(state.zoom_rect.x, state.zoom_rect.y, state.zoom_rect.w, state.zoom_rect.h);
+				let text = '[Zoom]';
+				let textMetrics = ctx.measureText(text);
+				if (state.zoom_rect.w > textMetrics.width && state.zoom_rect.h > textMetrics.actualBoundingBoxAscent) {
+					ctx.fillStyle = 'black';
+					ctx.fillRect(state.zoom_rect.x + (state.zoom_rect.w - textMetrics.width) / 2,
+					             state.zoom_rect.y + (state.zoom_rect.h - textMetrics.actualBoundingBoxAscent) / 2,
+					             textMetrics.width,  textMetrics.actualBoundingBoxAscent);
+					ctx.font = '18px serif';
+					ctx.fillStyle = 'white';
+					ctx.fillText(text, state.zoom_rect.x + (state.zoom_rect.w - textMetrics.width) / 2,
+					             state.zoom_rect.y + (textMetrics.actualBoundingBoxAscent + state.zoom_rect.h) / 2);
+				}
 			}
 		},
 		
@@ -139,8 +157,6 @@ function init() {
 	if (!ctx) {
 		alert('Unable to initialize 2D context.');
 		return;
-	} else {
-		ctx.strokeStyle = '#ff0';
 	}
 	
 	renderer = new Renderer(ctx, canvas.width);
@@ -158,16 +174,16 @@ function init() {
 	
 	canvas.addEventListener('mousedown', (e) => {
 		if (state.state == 'zoom')
-			state.zoom_rect = { x: e.offsetX, y: e.offsetY, w: 0, h: 0, r: 0 };
+			state.zoom_rect = { x: e.offsetX, y: e.offsetY, w: 0, h: 0 };
 	});
 	
 	canvas.addEventListener('mouseup', () => {
 		if (state.state == 'zoom') {
-			if (state.zoom_rect) {
+			if (state.zoom_rect && state.zoom_rect.w && state.zoom_rect.h) {
 				cplane.precision = precision_input.value;
 				
 				cplane.resize(
-					{ x: state.zoom_rect.x - renderer.img.x, y: state.zoom_rect.y - renderer.img.y, r: state.zoom_rect.r },
+					{ x: state.zoom_rect.x - renderer.img.x, y: state.zoom_rect.y - renderer.img.y, w: state.zoom_rect.w, h: state.zoom_rect.h },
 					renderer.resolution
 				);
 				
@@ -178,12 +194,13 @@ function init() {
 	});
 	
 	canvas.addEventListener('mousemove', (e) => {
-		if (event.buttons) {
+		if (e.buttons) {
 			if (state.state == 'zoom') {
 				if (state.zoom_rect) {
-					let max = Math.min(state.zoom_rect.x, state.zoom_rect.y, e.target.width - state.zoom_rect.x - 1, e.target.height - state.zoom_rect.y - 1);
-					let r = Math.sqrt((e.offsetX - state.zoom_rect.x) ** 2 + (e.offsetY - state.zoom_rect.y) ** 2);
-					state.zoom_rect.r = r > max ? max: r;
+					if (e.offsetX > state.zoom_rect.x && e.offsetY > state.zoom_rect.y) {
+						state.zoom_rect.w = e.offsetX - state.zoom_rect.x;
+						state.zoom_rect.h = e.offsetY - state.zoom_rect.y;
+					}
 				}
 			}
 			else
