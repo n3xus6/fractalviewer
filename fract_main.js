@@ -9,9 +9,8 @@ function ComplexPlane() {
 	const PRECISION_DEF = 100;
 	const CPLANE_X = -2.0;
 	const CPLANE_Y =  1.0;
-	const CPLANE_W =  2.5;
-	const CPLANE_H =  2.0;
-	var _rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_W, h: CPLANE_H };
+	const CPLANE_SIZE =  2.5;
+	var _rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_SIZE, h: CPLANE_SIZE };
 	var _precision = PRECISION_DEF;
 	var _iter_start = 0;
 	
@@ -30,7 +29,7 @@ function ComplexPlane() {
 		},
 		
 		reset: function() {
-			_rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_W, h: CPLANE_H };
+			_rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_SIZE, h: CPLANE_SIZE };
 			_precision = PRECISION_DEF;
 			_iter_start = 0;
 		},
@@ -194,6 +193,10 @@ function init() {
 	});
 	
 	canvas.addEventListener('mousemove', (e) => {
+
+		document.getElementById('c1').value = cplane.rect.x + (e.offsetX - renderer.img.x) * (cplane.rect.w / renderer.resolution);
+		document.getElementById('c2').value = cplane.rect.y - (e.offsetY - renderer.img.y) * (cplane.rect.h / renderer.resolution) + 'i';
+
 		if (e.buttons) {
 			if (state.state == 'zoom') {
 				if (state.zoom_rect) {
