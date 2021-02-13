@@ -7,9 +7,9 @@ function ComplexPlane() {
 	const PRECISION_MIN = 0;
 	const PRECISION_MAX = 1000;
 	const PRECISION_DEF = 100;
-	const CPLANE_X = -2.0;
-	const CPLANE_Y =  1.0;
-	const CPLANE_SIZE =  2.5;
+	const CPLANE_X = -2.5;
+	const CPLANE_Y =  2.5;
+	const CPLANE_SIZE = 5;
 	var _rect = { x: CPLANE_X, y: CPLANE_Y, w: CPLANE_SIZE, h: CPLANE_SIZE };
 	var _precision = PRECISION_DEF;
 	var _iter_start = 0;
@@ -61,7 +61,7 @@ function Renderer(ctx, resolution) {
 				render_worker.terminate();
 			
 			render_worker = new Worker('fract_compute.js');
-			render_worker.postMessage({query: 'mandelbrot_init', param: [img.data, cplane.rect, cplane.precision, cplane.iter_start]});
+			render_worker.postMessage({query: 'mandelbrot_init', param: [img.data, cplane.rect, cplane.precision, cplane.iter_start, state.fractal_type == 'julia' ? state.c : undefined]});
 			render_worker.onmessage = function(msg) {
 				if (msg.data.status == 'finished') {
 					progress.hidden = true;
@@ -120,16 +120,31 @@ function Renderer(ctx, resolution) {
 	};
 }
 
-function State(state) {
+function State(state, fractal_type) {
+	const DEFAULT_C_RE = 0.27334;
+	const DEFAULT_C_IM = 0.00742;
 	var _state = state;
+	var _fractal_type = fractal_type;
 	var _zoom_rect = null;
+	var _c = { re: DEFAULT_C_RE, im: DEFAULT_C_IM };
 	
 	return {
 		get zoom_rect() { return _zoom_rect; },
 		set zoom_rect(zoom_rect) { _zoom_rect = zoom_rect; },
 		
+		get fractal_type() { return _fractal_type; },
+		set fractal_type(fractal_type) { _fractal_type = fractal_type; },
+
 		get state() { return _state; },
 		set state(state) { _state = state; },
+
+		get c() { return _c; },
+		set c(c) { _c = c; },
+
+		reset: function() {
+			_c.re = DEFAULT_C_RE;
+			_c.im = DEFAULT_C_IM;
+		}
 	};
 }
 
@@ -148,6 +163,7 @@ function init() {
 	precision_number.innerHTML = `(${cplane.precision})`;
 	
 	document.getElementById('mouse_move').checked = true;
+	document.getElementById('fractal_mandelbrot').checked = true;
 	document.getElementById('resolution_low').checked = true;
 	
 	canvas.width = canvas.height = document.getElementById('resolution_low').value;
@@ -159,16 +175,31 @@ function init() {
 	}
 	
 	renderer = new Renderer(ctx, canvas.width);
-	state = new State('move');
+	state = new State('move', 'mandelbrot');
 	
 	
 	for (const element of document.getElementsByName('mouse_action'))
 		element.addEventListener('click', (e) => { state.state = e.target.value; });
+	
+	for (const element of document.getElementsByName('fractal_selection'))
+		element.addEventListener('click', (e) => {
+			state.fractal_type = e.target.value;
+			renderer.update_img_data(cplane);
+	});
 		
 	for (const element of document.getElementsByName('img_resolution'))
 		element.addEventListener('click', (e) => {
 			renderer.resolution = e.target.value;
 			renderer.update_img_data(cplane);
+	});
+
+	canvas.addEventListener('click', (e) => {
+		if (state.state == 'pick_c')
+		{
+			state.c = { re: Number(document.getElementById('c1').value), im: Number(document.getElementById('c2').value) };
+			if (state.fractal_type == 'julia')
+				renderer.update_img_data(cplane);
+		}
 	});
 	
 	canvas.addEventListener('mousedown', (e) => {
@@ -176,7 +207,7 @@ function init() {
 			state.zoom_rect = { x: e.offsetX, y: e.offsetY, w: 0, h: 0 };
 	});
 	
-	canvas.addEventListener('mouseup', () => {
+	canvas.addEventListener('mouseup', (e) => {
 		if (state.state == 'zoom') {
 			if (state.zoom_rect && state.zoom_rect.w && state.zoom_rect.h) {
 				cplane.precision = precision_input.value;
@@ -195,7 +226,7 @@ function init() {
 	canvas.addEventListener('mousemove', (e) => {
 
 		document.getElementById('c1').value = cplane.rect.x + (e.offsetX - renderer.img.x) * (cplane.rect.w / renderer.resolution);
-		document.getElementById('c2').value = cplane.rect.y - (e.offsetY - renderer.img.y) * (cplane.rect.h / renderer.resolution) + 'i';
+		document.getElementById('c2').value = cplane.rect.y - (e.offsetY - renderer.img.y) * (cplane.rect.h / renderer.resolution);
 
 		if (e.buttons) {
 			if (state.state == 'zoom') {
@@ -206,12 +237,13 @@ function init() {
 					}
 				}
 			}
-			else
+			else if (state.state == 'move') {
 				renderer.update_img_pos(e.movementX, e.movementY);
+			}
 		}
 	});
 	
-	canvas.addEventListener('mouseenter', (e) => { e.target.style.cursor = state.state == 'zoom' ? 'crosshair' : 'grab'; });
+	canvas.addEventListener('mouseenter', (e) => { e.target.style.cursor = state.state == 'zoom' ? 'zoom-in' : state.state == 'pick_c' ? 'crosshair' : 'grab'; });
 		
 	precision_input.addEventListener('change', () => {
 		cplane.precision = precision_input.value;
@@ -222,6 +254,7 @@ function init() {
 	
 	document.getElementById('reset').addEventListener('click', () => {
 		cplane.reset();
+		state.reset();
 		precision_input.value = cplane.precision;
 		precision_number.innerHTML = `(${cplane.precision})`;
 		renderer.update_img_data(cplane);

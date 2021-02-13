@@ -4,12 +4,11 @@
  * Otherwise the heavy calculations done here would freeze
  * the main web page.
  */
-function mandelbrot_calc(c, n) {
+function mandelbrot_calc(z, c, n) {
 	/*
 	 * z = z^2+c, with 'z' and 'c' complex numbers.
 	 * If abs(z) <= 2 after 'n' iterations, 'c' belongs to the Mandelbrot set.
 	 */
-	let z = { re: 0, im: 0 };
 	let i = 0;	
 	for ( ; i < n; i++) {
 		let re = z.re**2 - z.im**2 + c.re;
@@ -48,7 +47,7 @@ const M_skip_regions = [
 
 /* Initialize the image data 'img'. The complex plane area is specified
    by 'c1' and 'c2'. */
-function mandelbrot_init([img, cplane, n, iter_start]) {
+function mandelbrot_init([img, cplane, n, iter_start, c]) {
 	const num_px = img.height * img.width;
 	let progress = 0;
 	let iter_min = n;
@@ -57,17 +56,22 @@ function mandelbrot_init([img, cplane, n, iter_start]) {
 		let cur_px = 0;
 		let cur_progress = 0;
 		for (let x_px = 0, x = cplane.x; x_px < img.width; x_px++, x += cplane.w / img.width) {
-			
-			let skip = false;
-			for (const e of M_skip_regions) {
-				if (x > e.x0 && x < e.x1 && y < e.y0 && y > e.y1) {
-					skip = true;
-					break;
+			let m = 0;
+
+			if (c !== undefined) {
+				m = mandelbrot_calc({re: x, im: y}, c, n);
+			} else {
+				let skip = false;
+				for (const e of M_skip_regions) {
+					if (x > e.x0 && x < e.x1 && y < e.y0 && y > e.y1) {
+						skip = true;
+						break;
+					}
 				}
+				
+				/* If m == n, we consider c = x + iy as an element of M. */
+				m = skip ? n : mandelbrot_calc({re: 0, im: 0}, {re: x, im: y}, n);
 			}
-			
-			/* If m == n, we consider c = x + iy as an element of M. */
-			const m = skip ? n : mandelbrot_calc({re: x, im: y}, n);
 
 			if (m < iter_min)
 				iter_min = m;
@@ -112,3 +116,23 @@ onmessage = function(msg) {
 //		console.log('Calculation time: ' + (performance.now() - t0) + ' ms');
 	}
 }
+
+
+/* From the book "The Beauty of Fractals", Springer-Verlag
+ *
+ * Julia set example c values:
+ * 
+ *  { re: -0.12375,  im:  0.56508  }
+ *  { re: -0.12,     im:  0.74     }
+ *  { re: -0.481762, im: -0.531657 }
+ *  { re: -0.39054,  im: -0.58679  }
+ *  { re:  0.27334,  im:  0.00742  }
+ *  { re: -1.25,     im:  0        }
+ *  { re: -0.11,     im:  0.6557   }
+ *  { re:  0.11031,  im: -0.67037  }
+ *  { re:  0,        im:  1        }
+ *  { re: -0.194,    im:  0.6557   }
+ *  { re: -0.15652 , im:  1.03225  }
+ *  { re: -0.74543,  im:  0.11301  }
+ *  { re:  0.32,     im:  0.043    }
+ */

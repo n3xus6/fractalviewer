@@ -6,7 +6,7 @@
 		<script type='text/javascript' src='fract_main.js'></script>
 		<style>
 			canvas { border:1px solid #000; }
-			#control_panel { width:1024px; }
+			/*#control_panel { width:1024px; }*/
 		</style>
 	</head>
 	<body>
@@ -27,6 +27,23 @@
 							<div>
 								<input id='mouse_zoom' name='mouse_action' type='radio' value='zoom'>
 								<label for='mouse_zoom'>Zoom-in</label>
+							</div>
+							<div>
+								<input id='mouse_pick_c' name='mouse_action' type='radio' value='pick_c'>
+								<label for='mouse_pick_c'>Pick 'c'</label>
+							</div>
+						</fieldset>
+					</td>
+					<td>
+						<fieldset>
+							<legend>Fractal</legend>
+							<div>
+								<input id='fractal_mandelbrot' name='fractal_selection' type='radio' value='mandelbrot'>
+								<label for='fractal_mandelbrot'>Mandelbrot set</label>
+							</div>
+							<div>
+								<input id='fractal_julia' name='fractal_selection' type='radio' value='julia'>
+								<label for='fractal_julia'>Julia set</label>
 							</div>
 						</fieldset>
 					</td>
@@ -58,15 +75,10 @@
 						</p>
 					</td>
 					<td>
-						<div>
-							<label for='c1'>c1</label>
-							<input id='c1' name='constant_c' type='text' readonly>
-							
-						</div>
-						<div>
-							<label for='c2'>c2</label>
-							<input id='c2' name='constant_c' type='text' readonly>
-						</div>
+						<p>
+							c = <input id='c1' name='constant_c' type='text' readonly>
+							+ <input id='c2' name='constant_c' type='text' readonly> i
+						</p>
 					</td>
 				</tr>
 			</table>
