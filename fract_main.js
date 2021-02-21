@@ -259,6 +259,21 @@ function init() {
 		precision_number.innerHTML = `(${cplane.precision})`;
 		renderer.update_img_data(cplane);
 	});
+
+	document.getElementById('save').addEventListener('click', () => {
+		/* Create bitmap for download from the ImageData object. */
+		let tmpcvs = document.createElement('canvas');
+		tmpcvs.width = renderer.img.data.width;
+		tmpcvs.height = renderer.img.data.height;
+		tmpcvs.getContext("2d").putImageData(renderer.img.data, 0, 0);
+		tmpcvs.toBlob(function(blob) {
+			var a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.target = "_blank";
+			a.rel = "noopener noreferrer";
+			a.click();
+		});
+	});
 	
 	renderer.update_img_data(cplane);
 	window.requestAnimationFrame(render_frame);
