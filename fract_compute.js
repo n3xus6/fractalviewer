@@ -28,23 +28,6 @@ function mandelbrot_calc(z, c, n) {
 	return i;
 }
 
-/* Numbers within these regions belong to M (only an approximation).
-   Skipping the test for them largely decreases the computation time. However,
-   it would be also possible, and nicer, to quickly calculate if c is in the
-   main cardioid or the period 2 component to avoid the function interation. */
-const M_skip_regions = [
-	{ x0: -1.350, y0:  0.035, x1: -1.270, y1: -0.035 }, // small bulb center
-	{ x0: -1.175, y0:  0.175, x1: -0.825, y1: -0.175 }, // middle bulb center
-	{ x0: -0.567, y0:  0.442, x1:  0.245, y1: -0.442 }, // large bulb center
-	{ x0: -0.180, y0: -0.690, x1: -0.060, y1: -0.810 }, // lower small bulb center
-	{ x0: -0.180, y0:  0.810, x1: -0.060, y1:  0.690 }, // upper small bulb center
-	{ x0: -0.445, y0: -0.442, x1:  0.195, y1: -0.542 }, // large bulb lower region
-	{ x0: -0.445, y0:  0.542, x1:  0.195, y1:  0.442 }, // large bulb upper region
-	{ x0: -0.670, y0:  0.300, x1: -0.568, y1: -0.300 }, // large bulb left region
-	{ x0:  0.245, y0: -0.100, x1:  0.345, y1: -0.300 }, // large bulb lower right region
-	{ x0:  0.245, y0:  0.300, x1:  0.345, y1:  0.100 }, // large bulb upper right region
-];
-
 /* Initialize the image data 'img'. The complex plane area is specified
    by 'c1' and 'c2'. */
 function mandelbrot_init([img, cplane, n, iter_start, c]) {
@@ -57,17 +40,44 @@ function mandelbrot_init([img, cplane, n, iter_start, c]) {
 		let cur_progress = 0;
 		for (let x_px = 0, x = cplane.x; x_px < img.width; x_px++, x += cplane.w / img.width) {
 			let m = 0;
+			let skip = false;
 
 			if (c !== undefined) {
 				m = mandelbrot_calc({re: x, im: y}, c, n);
 			} else {
-				let skip = false;
-				for (const e of M_skip_regions) {
-					if (x > e.x0 && x < e.x1 && y < e.y0 && y > e.y1) {
-						skip = true;
-						break;
+				/* Main cardioid
+				 * http://abel.math.harvard.edu/~ctm/programs/index.html
+				 */
+				if (x > -0.75 && x < 0.5) {
+					let w = { re: 1 - 4 * x, im: -4 * y};
+					if (w.re > Math.abs(w.im)) {
+						w.re = Math.sqrt((w.re + Math.sqrt(w.re**2 + w.im**2)) / 2);
+						w.im = w.im / (2 * w.re);
+					} else {
+						w.im = Math.sqrt((-w.re + Math.sqrt(w.re**2 + w.im**2)) / 2);
+						w.re = (-4 * y) / (2 * w.im);
 					}
+					w.im = w.im**2;
+					if ((w.re - 1)**2 + w.im < 1 || (w.re + 1)**2 + w.im < 1)
+						skip = true;
 				}
+
+				/* Period 2 bulb (center = -1) */
+				else if (x > -1.25 && x < -0.75) {
+					if ((x + 1)**2 + y**2 < 0.0625)
+						skip = true;
+				}
+
+				/* Period 4 bulb (center = -1.3107) */
+				if ((x + 1.3107)**2 + y**2 < 0.0032)
+					skip = true;
+
+				/* Period 3 bulb (center = -0.1226 +/- 0.7449i) */
+				else if ((x + 0.1226)**2 + (y-0.7449)**2 < 0.008)
+					skip = true;
+
+				else if ((x + 0.1226)**2 + (y+0.7449)**2 < 0.008)
+					skip = true;
 				
 				/* If m == n, we consider c = x + iy as an element of M. */
 				m = skip ? n : mandelbrot_calc({re: 0, im: 0}, {re: x, im: y}, n);
@@ -111,9 +121,9 @@ function mandelbrot_init([img, cplane, n, iter_start, c]) {
 
 onmessage = function(msg) {
 	if (msg.data.query == 'mandelbrot_init') {
-//		let t0 = performance.now();
+		// let t0 = performance.now();
 		mandelbrot_init(msg.data.param);
-//		console.log('Calculation time: ' + (performance.now() - t0) + ' ms');
+		// console.log('Calculation time: ' + (performance.now() - t0) + ' ms');
 	}
 }
 
