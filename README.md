@@ -3,9 +3,11 @@ A Fractal viewer implemented in JavaScript for running in the web browser.
 
 [Directly open it](https://n3xus6.github.io/fractalviewer/fract_viewer.html)
 
-### Screenshots
+### Example pictures
 
-![Fractal Viewer Mandelbrot Set](./screenshots.png "Mandelbrot Set")
+The pictures of the Mandelbrot set and the Julia set as you can see below have been created with this app.
+
+![Fractal Viewer Mandelbrot Set](./collage.png "Mandelbrot Set")
 
 ### Running it locally
 
@@ -49,4 +51,5 @@ If `c` is held constand and `z` is varied instead, one obtains the corresponding
 
 ## Resources
 
-[Video lecture on YouTube: Chaos, Fractals and Dynamics: Computer Experiments in Mathematics, Robert L. Devaney](https://www.youtube.com/watch?v=TVfn6P4Z4-8)
+- [Video lecture on YouTube: Chaos, Fractals and Dynamics: Computer Experiments in Mathematics, Robert L. Devaney](https://www.youtube.com/watch?v=TVfn6P4Z4-8)
+- [The Beauty of Fractas - Heinz-Otto Peitgen, Peter H. Richter](https://www.springer.com/gp/book/9783540158516)
